@@ -2,14 +2,14 @@ package main
 
 import (
 	"context"
-	"math/rand"
-	"net/http"
-	"os"
-	"time"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
+	"math/rand"
+	"net/http"
+	"os"
+	"time"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -24,16 +24,16 @@ func randomString(length int) string {
 }
 
 type Link struct {
-	ID string `bson:"id"`
-	RedirectTo string `bson:"redirect_to"`
-	CreatedAt time.Time `bson:"created_at"`
+	ID         string    `bson:"id"`
+	RedirectTo string    `bson:"redirect_to"`
+	CreatedAt  time.Time `bson:"created_at"`
 }
 
 func newLink(redirectTo string) *Link {
 	return &Link{
-		ID: randomString(10),
+		ID:         randomString(10),
 		RedirectTo: redirectTo,
-		CreatedAt: time.Now(),
+		CreatedAt:  time.Now(),
 	}
 }
 
@@ -54,11 +54,11 @@ func main() {
 	db_name := os.Getenv("DB_NAME")
 	collection_name := os.Getenv("COLLECTION_NAME")
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-    clientOpts := options.Client().ApplyURI(mongodb_uri).SetServerAPIOptions(serverAPI)
+	clientOpts := options.Client().ApplyURI(mongodb_uri).SetServerAPIOptions(serverAPI)
 
 	client, err := mongo.Connect(clientOpts)
 
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -75,10 +75,10 @@ func main() {
 	collection := client.Database(db_name).Collection(collection_name)
 
 	router := gin.Default()
-	router.GET("/createLink", func(ctx *gin.Context) {
+	router.POST("/createLink", func(ctx *gin.Context) {
 		redirectTo := ctx.Query("redirectTo")
 
-		if (redirectTo == "") {
+		if redirectTo == "" {
 			ctx.JSON(400, gin.H{
 				"error": "no redirect link found",
 			})
@@ -89,7 +89,7 @@ func main() {
 		go fetch(redirectTo, fetchChannel)
 		valid := <-fetchChannel
 		link := newLink(redirectTo)
-		if (valid) {
+		if valid {
 			_, err := collection.InsertOne(context.TODO(), link)
 			if err != nil {
 				ctx.JSON(500, gin.H{
