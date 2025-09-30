@@ -75,7 +75,7 @@ func main() {
 	collection := client.Database(db_name).Collection(collection_name)
 
 	router := gin.Default()
-	router.GET("/createLink", func(ctx *gin.Context) {
+	router.POST("/createLink", func(ctx *gin.Context) {
 		redirectTo := ctx.Query("redirectTo")
 
 		if (redirectTo == "") {
