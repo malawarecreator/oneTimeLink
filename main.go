@@ -2,14 +2,16 @@ package main
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
-	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 	"math/rand"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -107,6 +109,36 @@ func main() {
 			})
 			return
 		}
+	})
+
+	router.POST("/deleteLink", func(ctx *gin.Context) {
+		linkId := ctx.Query("linkId")
+
+		if linkId == "" {
+			ctx.JSON(400, gin.H{
+				"error": "missing linkId",
+			})
+			return
+		}
+
+		res, err := collection.DeleteOne(context.TODO(), bson.M{"id": linkId})
+
+		if err != nil {
+			ctx.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		if res.DeletedCount == 0 {
+			ctx.JSON(404, gin.H{
+				"error": "Link not found",
+			})
+			return
+		}
+
+		ctx.Status(204)
+
 	})
 
 	router.Run()
