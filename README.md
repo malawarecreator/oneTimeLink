@@ -1,7 +1,15 @@
 # oneTimeLink
 A microservice for generating one-time links<br>
-## to run
-`docker run --env MONGODB_URI=YOUR_URI DB_NAME=YOUR_DB_NAME COLLECTION_NAME=YOUR_COLLECTION_NAME -p YOUR_PORT:8080 onetimelink:VERSION`
+## To run
+```shell 
+docker run \
+  -e MONGODB_URI=YOUR_URI \
+  -e DB_NAME=YOUR_DB_NAME \
+  -e COLLECTION_NAME=YOUR_COLLECTION_NAME \
+  -e PORT=8080 \
+  -p 8080:8080 \
+  onetimelink:VERSION
+```
 
 ## APIs
 POST `/createLink?redirectTo=YOUR_URL` to create new link. The `id` will be returned in json `{"id":"THE_ID"}`<br>
