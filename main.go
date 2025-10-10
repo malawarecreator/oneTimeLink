@@ -51,7 +51,12 @@ func fetch(url string, valid chan bool) {
 	valid <- true
 }
 
+func delete(collection *mongo.Collection, linkId string) {
+	collection.DeleteOne(context.TODO(), bson.M{"id": linkId})
+}
+
 func main() {
+	port := os.Getenv("PORT")
 	mongodb_uri := os.Getenv("MONGODB_URI")
 	db_name := os.Getenv("DB_NAME")
 	collection_name := os.Getenv("COLLECTION_NAME")
@@ -77,6 +82,7 @@ func main() {
 	collection := client.Database(db_name).Collection(collection_name)
 
 	router := gin.Default()
+
 	router.POST("/createLink", func(ctx *gin.Context) {
 		redirectTo := ctx.Query("redirectTo")
 
@@ -138,9 +144,35 @@ func main() {
 		}
 
 		ctx.Status(204)
-
 	})
 
-	router.Run()
+	router.GET("/l/:id", func(ctx *gin.Context) {
+		id := ctx.Param("id")
+		if id == "" {
+			ctx.JSON(400, gin.H{
+				"error": "Link ID not found",
+			})
+			return
+		}
+
+		res := collection.FindOne(context.TODO(), bson.M{
+			"id": id,
+		})
+
+		var link Link
+		err := res.Decode(&link)
+
+		if err != nil {
+			ctx.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		go delete(collection, link.ID)
+
+		ctx.Redirect(302, link.RedirectTo)
+	})
+	router.Run(":" + port)
 
 }
