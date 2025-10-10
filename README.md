@@ -1,5 +1,10 @@
 # oneTimeLink
 A microservice for generating one-time links<br>
+
+## Image links:
+`docker.io/benl858/onetimelink:latest`
+`ghcr.io/malawarecreator/onetimelink:latest`
+
 ## To run
 ```shell 
 docker run \
