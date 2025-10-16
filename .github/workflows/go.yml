@@ -10,7 +10,7 @@ permissions:
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "the-gateway-update" ]
   pull_request:
     branches: [ "master" ]
 
