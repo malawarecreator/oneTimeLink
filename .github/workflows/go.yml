@@ -6,10 +6,7 @@ name: Go
 permissions:
   contents: write
 
-# Environment variables to configure Go and Go modules. Customize as necessary
-env:
-  GOPROXY: '' # A Go Proxy server to be used
-  GOPRIVATE: ''
+
 
 on:
   push:
