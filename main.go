@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -16,7 +17,7 @@ import (
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func randomString(length int) string {
+func RandomString(length int) string {
 	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	result := make([]byte, length)
 	for i := range result {
@@ -33,13 +34,13 @@ type Link struct {
 
 func newLink(redirectTo string) *Link {
 	return &Link{
-		ID:         randomString(10),
+		ID:         RandomString(10),
 		RedirectTo: redirectTo,
 		CreatedAt:  time.Now(),
 	}
 }
 
-func fetch(url string, valid chan bool) {
+func Fetch(url string, valid chan bool) {
 	resp, err := http.Get(url)
 
 	if err != nil {
@@ -60,10 +61,12 @@ func main() {
 	mongodb_uri := os.Getenv("MONGODB_URI")
 	db_name := os.Getenv("DB_NAME")
 	collection_name := os.Getenv("COLLECTION_NAME")
+	log.Println(port, mongodb_uri, db_name, collection_name)
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	clientOpts := options.Client().ApplyURI(mongodb_uri).SetServerAPIOptions(serverAPI)
 
 	client, err := mongo.Connect(clientOpts)
+
 
 	if err != nil {
 		panic(err)
@@ -85,16 +88,18 @@ func main() {
 
 	router.POST("/createLink", func(ctx *gin.Context) {
 		redirectTo := ctx.Query("redirectTo")
+		log.Println("Recieved creation request with URL: " + redirectTo)
 
 		if redirectTo == "" {
 			ctx.JSON(400, gin.H{
 				"error": "no redirect link found",
 			})
+			log.Println("Failed to create link: no redirect link found")
 			return
 		}
 
 		fetchChannel := make(chan bool)
-		go fetch(redirectTo, fetchChannel)
+		go Fetch(redirectTo, fetchChannel)
 		valid := <-fetchChannel
 		link := newLink(redirectTo)
 		if valid {
@@ -103,27 +108,32 @@ func main() {
 				ctx.JSON(500, gin.H{
 					"error": err.Error(),
 				})
+				log.Println("Failed to create link: " + err.Error())
 				return
 			}
 			ctx.JSON(201, gin.H{
 				"id": link.ID,
 			})
+			log.Println("Created: " + link.ID)
 			return
 		} else {
 			ctx.JSON(400, gin.H{
 				"error": "invalid link",
 			})
+			log.Println("Failed to create link: invalid link")
 			return
 		}
 	})
 
 	router.POST("/deleteLink", func(ctx *gin.Context) {
 		linkId := ctx.Query("linkId")
+		log.Println("Recieved deletion request with ID: " + linkId)
 
 		if linkId == "" {
 			ctx.JSON(400, gin.H{
 				"error": "missing linkId",
 			})
+			log.Println("Failed to delete link: ID not given")
 			return
 		}
 
@@ -133,6 +143,7 @@ func main() {
 			ctx.JSON(500, gin.H{
 				"error": err.Error(),
 			})
+			log.Println("Failed to delete link: " + err.Error())
 			return
 		}
 
@@ -140,18 +151,21 @@ func main() {
 			ctx.JSON(404, gin.H{
 				"error": "Link not found",
 			})
+			log.Println("Failed to delete link: Link not found")
 			return
 		}
-
+		log.Println("Deleted " + linkId)
 		ctx.Status(204)
 	})
 
 	router.GET("/l/:id", func(ctx *gin.Context) {
 		id := ctx.Param("id")
+		log.Println("Recieved request with ID: " + id)
 		if id == "" {
 			ctx.JSON(400, gin.H{
 				"error": "Link ID not found",
 			})
+			log.Println("Failed to redirect: ID not found")
 			return
 		}
 
@@ -166,11 +180,12 @@ func main() {
 			ctx.JSON(500, gin.H{
 				"error": err.Error(),
 			})
+			log.Println("Failed to redirect: " + err.Error())
 			return
 		}
 
 		go delete(collection, link.ID)
-
+		log.Println(link.ID + " Redirecting to " + link.RedirectTo)
 		ctx.Redirect(302, link.RedirectTo)
 	})
 	router.Run(":" + port)
