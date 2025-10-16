@@ -16,7 +16,7 @@ import (
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func randomString(length int) string {
+func RandomString(length int) string {
 	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	result := make([]byte, length)
 	for i := range result {
@@ -33,13 +33,13 @@ type Link struct {
 
 func newLink(redirectTo string) *Link {
 	return &Link{
-		ID:         randomString(10),
+		ID:         RandomString(10),
 		RedirectTo: redirectTo,
 		CreatedAt:  time.Now(),
 	}
 }
 
-func fetch(url string, valid chan bool) {
+func Fetch(url string, valid chan bool) {
 	resp, err := http.Get(url)
 
 	if err != nil {
@@ -94,7 +94,7 @@ func main() {
 		}
 
 		fetchChannel := make(chan bool)
-		go fetch(redirectTo, fetchChannel)
+		go Fetch(redirectTo, fetchChannel)
 		valid := <-fetchChannel
 		link := newLink(redirectTo)
 		if valid {
