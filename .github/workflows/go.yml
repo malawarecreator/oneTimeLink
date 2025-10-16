@@ -3,9 +3,14 @@
 
 name: Go
 
+permissions:
+  contents: write
+
+
+
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "the-gateway-update" ]
   pull_request:
     branches: [ "master" ]
 
@@ -23,6 +28,10 @@ jobs:
 
     - name: Build
       run: go build -v ./...
+
+    - name: Go Dependency Submission
+      uses: actions/go-dependency-submission@v2.0.3
+        
 
     - name: Test
       run: go test -v ./...
